@@ -38,6 +38,7 @@
 #include <sofa/helper/system/PluginManager.h>
 
 #include <chrono>
+#include <sofa/core/ObjectFactory.h>
 
 int main(int argc, char** argv)
 {
@@ -84,6 +85,14 @@ int main(int argc, char** argv)
     for (const auto& plugin : pluginsToLoad)
     {
         sofa::helper::system::PluginManager::getInstance().loadPlugin(plugin);
+    }
+
+    sofa::core::ObjectFactory* objectFactory = sofa::core::ObjectFactory::getInstance();
+    // calling explicitly registerObjects from loadedPlugins
+    for (const auto& [pluginPath, plugin] : sofa::helper::system::PluginManager::getInstance().getPluginMap())
+    {
+        const auto& pluginName = plugin.getModuleName();
+        objectFactory->registerObjectsFromPlugin(pluginName);
     }
 
     std::string fileName = result["file"].as<std::string>();
