@@ -227,7 +227,7 @@ namespace windows {
                                     if (openStack.empty() || openStack.top())
                                     {
                                         ImGuiTreeNodeFlags node_flags = base_flags;
-                                        if (selectedTimers.find(rec.id) != selectedTimers.end())
+                                        if (selectedTimers.contains(rec.id))
                                         {
                                             node_flags |= ImGuiTreeNodeFlags_Selected;
                                         }
