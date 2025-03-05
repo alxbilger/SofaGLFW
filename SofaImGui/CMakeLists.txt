@@ -17,20 +17,28 @@ include(FetchContent)
 
 FetchContent_Declare(imgui
         GIT_REPOSITORY https://github.com/ocornut/imgui
-        GIT_TAG        fc198fe1dbae2e045b7fb31d53466a54f5368414
+        GIT_TAG        11b3a7c8ca23201294464c7f368614a9106af2a1 # v1.91.8-docking
 )
 FetchContent_MakeAvailable(imgui)
 
-FetchContent_Declare(nfd
-        GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended
-        GIT_TAG        d4df2b6ad5420f5300c00f418bf28d86291fa675                # v1.0.0
-)
-FetchContent_MakeAvailable(nfd)
-set_property(TARGET nfd  PROPERTY POSITION_INDEPENDENT_CODE ON)
+find_package(nfd CONFIG QUIET)
+
+if(NOT TARGET nfd::nfd)
+    message("nativefiledialog-extended not found, fetching source code...")
+    FetchContent_Declare(nfd
+            GIT_REPOSITORY https://github.com/btzy/nativefiledialog-extended
+            GIT_TAG        d4df2b6ad5420f5300c00f418bf28d86291fa675                # v1.0.0
+    )
+    FetchContent_MakeAvailable(nfd)
+    set_property(TARGET nfd  PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_target_properties(nfd PROPERTIES LINKER_LANGUAGE CXX)
+    add_library(nfd::nfd ALIAS nfd) # introduced in nfd >= v1.2.1
+endif()
+
 
 FetchContent_Declare(ImPlot
         GIT_REPOSITORY https://github.com/epezent/implot
-        GIT_TAG        b47c8bacdbc78bc521691f70666f13924bb522ab
+        GIT_TAG        18c72431f8265e2b0b5378a3a73d8a883b2175ff # v0.16
 )
 FetchContent_MakeAvailable(ImPlot)
 
@@ -42,7 +50,7 @@ FetchContent_MakeAvailable(IconFontCppHeaders)
 
 FetchContent_Declare(simpleini
         GIT_REPOSITORY https://github.com/brofield/simpleini
-        GIT_TAG        9b3ed7ec815997bc8c5b9edf140d6bde653e1458
+        GIT_TAG        09c21bda1dc1b578fa55f4a005d79b0afd481296 # v4.22
 )
 FetchContent_MakeAvailable(simpleini)
 
@@ -98,10 +106,6 @@ set(HEADER_FILES
     ${SOFAIMGUI_SOURCE_DIR}/windows/ViewPort.h
     ${SOFAIMGUI_SOURCE_DIR}/AppIniFile.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/WindowState.h
-
-
-
-
 )
 
 set(SOURCE_FILES
@@ -131,8 +135,7 @@ set(IMGUI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources ${imgui_SOURCE_DIR} $
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${IMGUI_HEADER_FILES} ${IMGUI_SOURCE_FILES})
 target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaGLFW Sofa.GL.Component.Rendering3D ${CMAKE_DL_LIBS})
-set_target_properties(nfd PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(${PROJECT_NAME} PRIVATE nfd glfw)
+target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd)
 
 find_package(SofaPython3 QUIET)
 if(SofaPython3_FOUND)
