@@ -154,7 +154,7 @@ namespace windows
                             }
 
                             ImGui::PushStyleColor(ImGuiCol_Text, objectColor);
-                            const auto objectOpen = ImGui::TreeNodeEx(icon, objectFlags);
+                            const auto objectOpen = ImGui::TreeNodeEx((icon + std::string("##") + object->getName()).c_str(), objectFlags);
                             ImGui::PopStyleColor();
 
                             if (ImGui::IsItemClicked())
