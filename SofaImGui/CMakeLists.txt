@@ -48,14 +48,16 @@ FetchContent_Declare(IconFontCppHeaders
 )
 FetchContent_MakeAvailable(IconFontCppHeaders)
 
-find_package(imgui_node_editor QUIET)
-if(NOT TARGET imgui_node_editor)
-    FetchContent_Declare(imgui_node_editor
-            GIT_REPOSITORY https://github.com/thedmd/imgui-node-editor
-            GIT_TAG        e78e447900909a051817a760efe13fe83e6e1afc # the last version v0.9.3 is not compatible with IMGUI_VERSION >= 19002, so it's a commit from master
+find_package(ImNodeFlow QUIET)
+if(NOT TARGET ImNodeFlow)
+    FetchContent_Declare(ImNodeFlow
+            GIT_REPOSITORY https://github.com/Fattorino/ImNodeFlow
+            GIT_TAG        b3b84d20f97e696ee937b519d4f5c4d48c324258 # >v1.2.2
     )
-    FetchContent_MakeAvailable(imgui_node_editor)
-    set(IMGUI_NODE_EDITOR_ROOT_DIR ${imgui_node_editor_SOURCE_DIR})
+    FetchContent_GetProperties(ImNodeFlow)
+    if(NOT some-library_POPULATED)
+      FetchContent_Populate(ImNodeFlow)
+    endif()
 endif()
 
 FetchContent_Declare(simpleini
@@ -95,24 +97,12 @@ set(IMGUI_SOURCE_FILES
     resources/Style.cpp
 )
 
-set(IMGUI_NODE_EDITOR_FILES
-    ${imgui_node_editor_SOURCE_DIR}/crude_json.cpp
-    ${imgui_node_editor_SOURCE_DIR}/crude_json.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_bezier_math.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_bezier_math.inl
-    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.cpp
-    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.cpp
-    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_extra_math.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_extra_math.inl
-    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_api.cpp
-    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_internal.h
-    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_internal.inl
-    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor.cpp
-    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor.h
-    ${imgui_node_editor_SOURCE_DIR}/misc/imgui_node_editor.natvis
+set(IMNODEFLOW_HEADER_FILES
+    ${ImNodeFlow_SOURCE_DIR}/include/ImNodeFlow.h
 )
+
+file(GLOB_RECURSE IMNODEFLOW_SOURCE_FILES "${ImNodeFlow_SOURCE_DIR}/src/*.cpp" "${ImNodeFlow_SOURCE_DIR}/src/*.h" "${ImNodeFlow_SOURCE_DIR}/src/*.inl")
+message(STATUS "IMNODEFLOW_SOURCE_FILES = ${IMNODEFLOW_SOURCE_FILES}")
 
 set(SOFAIMGUI_SOURCE_DIR src/SofaImGui)
 
@@ -163,10 +153,11 @@ set(SOURCE_FILES
 
 set(IMGUI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources ${imgui_SOURCE_DIR} ${implot_SOURCE_DIR} ${iconfontcppheaders_SOURCE_DIR} ${simpleini_SOURCE_DIR})
 
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${IMGUI_HEADER_FILES} ${IMGUI_SOURCE_FILES} ${IMGUI_NODE_EDITOR_FILES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCE_DIR} ${imgui_node_editor_SOURCE_DIR})
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${IMGUI_HEADER_FILES} ${IMGUI_SOURCE_FILES} ${IMNODEFLOW_HEADER_FILES} ${IMNODEFLOW_SOURCE_FILES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCE_DIR} ${ImNodeFlow_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaGLFW Sofa.GL.Component.Rendering3D ${CMAKE_DL_LIBS})
-target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd imgui_node_editor)
+target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd)
+target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_DEFINE_MATH_OPERATORS)
 
 find_package(SofaPython3 QUIET)
 if(SofaPython3_FOUND)
