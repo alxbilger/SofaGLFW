@@ -69,6 +69,7 @@
 #include <SofaImGui/UIStrings.h>
 #include "windows/Performances.h"
 #include "windows/Log.h"
+#include "windows/NodeGraph.h"
 #include "windows/Profiler.h"
 #include "windows/SceneGraph.h"
 #include "windows/DisplayFlags.h"
@@ -92,6 +93,7 @@ ImGuiGUIEngine::ImGuiGUIEngine()
               winManagerPlugins(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("plugins.txt"))),
               winManagerComponents(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("components.txt"))),
               winManagerLog(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("log.txt"))),
+    winNodeGraph(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("nodeGraph.txt"))),
               winManagerSettings(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("settings.txt"))),
               winManagerViewPort(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("viewport.txt"))),
               firstRunState(helper::system::FileSystem::append(sofaimgui::getConfigurationFolderPath(), std::string("firstrun.txt")))
@@ -253,6 +255,7 @@ void ImGuiGUIEngine::startFrame(sofaglfw::SofaGLFWBaseGUI* baseGUI)
     static constexpr auto windowNamePerformances = ICON_FA_CHART_LINE "  Performances";
     static constexpr auto windowNameProfiler = ICON_FA_HOURGLASS "  Profiler";
     static constexpr auto windowNameSceneGraph = ICON_FA_SITEMAP "  Scene Graph";
+    static constexpr auto windowNameNodeGraph = ICON_FA_SITEMAP "  Node Graph";
     static constexpr auto windowNameDisplayFlags = ICON_FA_EYE "  Display Flags"     ;
     static constexpr auto windowNamePlugins = ICON_FA_CIRCLE_PLUS "  Plugins";
     static constexpr auto windowNameComponents = ICON_FA_LIST "  Components";
@@ -465,6 +468,7 @@ void ImGuiGUIEngine::startFrame(sofaglfw::SofaGLFWBaseGUI* baseGUI)
             ImGui::Checkbox(windowNameProfiler, winManagerProfiler.getStatePtr());
 
             ImGui::Checkbox(windowNameSceneGraph, winManagerSceneGraph.getStatePtr());
+            ImGui::Checkbox(windowNameNodeGraph, winNodeGraph.getStatePtr());
 
             ImGui::Checkbox(windowNameDisplayFlags, winManagerDisplayFlags.getStatePtr());
 
@@ -568,6 +572,11 @@ void ImGuiGUIEngine::startFrame(sofaglfw::SofaGLFWBaseGUI* baseGUI)
     static std::set<core::objectmodel::BaseObject*> openedComponents;
     static std::set<core::objectmodel::BaseObject*> focusedComponents;
     windows::showSceneGraph(groot, windowNameSceneGraph, openedComponents, focusedComponents, winManagerSceneGraph);
+
+    /***************************************
+     * Node graph window
+     **************************************/
+    windows::showNodeGraph(groot, windowNameNodeGraph, winNodeGraph);
 
 
     /***************************************

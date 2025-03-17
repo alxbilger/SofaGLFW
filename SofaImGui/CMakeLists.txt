@@ -48,6 +48,16 @@ FetchContent_Declare(IconFontCppHeaders
 )
 FetchContent_MakeAvailable(IconFontCppHeaders)
 
+find_package(imgui_node_editor QUIET)
+if(NOT TARGET imgui_node_editor)
+    FetchContent_Declare(imgui_node_editor
+            GIT_REPOSITORY https://github.com/thedmd/imgui-node-editor
+            GIT_TAG        e78e447900909a051817a760efe13fe83e6e1afc # the last version v0.9.3 is not compatible with IMGUI_VERSION >= 19002, so it's a commit from master
+    )
+    FetchContent_MakeAvailable(imgui_node_editor)
+    set(IMGUI_NODE_EDITOR_ROOT_DIR ${imgui_node_editor_SOURCE_DIR})
+endif()
+
 FetchContent_Declare(simpleini
         GIT_REPOSITORY https://github.com/brofield/simpleini
         GIT_TAG        09c21bda1dc1b578fa55f4a005d79b0afd481296 # v4.22
@@ -85,6 +95,25 @@ set(IMGUI_SOURCE_FILES
     resources/Style.cpp
 )
 
+set(IMGUI_NODE_EDITOR_FILES
+    ${imgui_node_editor_SOURCE_DIR}/crude_json.cpp
+    ${imgui_node_editor_SOURCE_DIR}/crude_json.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_bezier_math.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_bezier_math.inl
+    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.cpp
+    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.cpp
+    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_canvas.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_extra_math.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_extra_math.inl
+    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_api.cpp
+    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_internal.h
+    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor_internal.inl
+    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor.cpp
+    ${imgui_node_editor_SOURCE_DIR}/imgui_node_editor.h
+    ${imgui_node_editor_SOURCE_DIR}/misc/imgui_node_editor.natvis
+)
+
 set(SOFAIMGUI_SOURCE_DIR src/SofaImGui)
 
 set(HEADER_FILES
@@ -97,6 +126,7 @@ set(HEADER_FILES
     ${SOFAIMGUI_SOURCE_DIR}/UIStrings.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/Performances.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/Log.h
+    ${SOFAIMGUI_SOURCE_DIR}/windows/NodeGraph.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/Profiler.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/SceneGraph.h
     ${SOFAIMGUI_SOURCE_DIR}/windows/DisplayFlags.h
@@ -116,6 +146,7 @@ set(SOURCE_FILES
     ${SOFAIMGUI_SOURCE_DIR}/initSofaImGui.cpp
     ${SOFAIMGUI_SOURCE_DIR}/windows/Performances.cpp
     ${SOFAIMGUI_SOURCE_DIR}/windows/Log.cpp
+    ${SOFAIMGUI_SOURCE_DIR}/windows/NodeGraph.cpp
     ${SOFAIMGUI_SOURCE_DIR}/windows/Profiler.cpp
     ${SOFAIMGUI_SOURCE_DIR}/windows/SceneGraph.cpp
     ${SOFAIMGUI_SOURCE_DIR}/windows/DisplayFlags.cpp
@@ -132,10 +163,10 @@ set(SOURCE_FILES
 
 set(IMGUI_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources ${imgui_SOURCE_DIR} ${implot_SOURCE_DIR} ${iconfontcppheaders_SOURCE_DIR} ${simpleini_SOURCE_DIR})
 
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${IMGUI_HEADER_FILES} ${IMGUI_SOURCE_FILES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCE_DIR})
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${IMGUI_HEADER_FILES} ${IMGUI_SOURCE_FILES} ${IMGUI_NODE_EDITOR_FILES})
+target_include_directories(${PROJECT_NAME} PRIVATE ${IMGUI_SOURCE_DIR} ${imgui_node_editor_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC SofaGLFW Sofa.GL.Component.Rendering3D ${CMAKE_DL_LIBS})
-target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd)
+target_link_libraries(${PROJECT_NAME} PRIVATE nfd::nfd imgui_node_editor)
 
 find_package(SofaPython3 QUIET)
 if(SofaPython3_FOUND)
