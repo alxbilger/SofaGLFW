@@ -10,7 +10,7 @@ sofa_find_package(Sofa.Component.Visual REQUIRED)
 sofa_find_package(Sofa.GUI.Common QUIET)
 
 
-find_package(glfw3 3.4 CONFIG QUIET)
+#find_package(glfw3 3.4 CONFIG QUIET)
 
 if( UNIX AND NOT APPLE )
     option(SOFAGLFW_USEX11 "Flag to force x11 for windows management" ON)
@@ -25,7 +25,7 @@ if(TARGET glfw)
         sofa_install_libraries(TARGETS glfw)
     endif()
 elseif( (DEFINED SOFA_ALLOW_FETCH_DEPENDENCIES AND SOFA_ALLOW_FETCH_DEPENDENCIES) OR (NOT DEFINED SOFA_ALLOW_FETCH_DEPENDENCIES))
-    # Download if 
+    # Download if
     # 1) SOFA_ALLOW_FETCH_DEPENDENCIES is defined, meaning a in-tree project AND its value is TRUE
     # 2) SOFA_ALLOW_FETCH_DEPENDENCIES is not defined, which means it is a out-of-tree project
     message("${PROJECT_NAME}: glfw3 not found and SOFA_ALLOW_FETCH_DEPENDENCIES is ON, fetching source code...")
