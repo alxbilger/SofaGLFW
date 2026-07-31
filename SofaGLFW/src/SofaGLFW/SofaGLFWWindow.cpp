@@ -306,58 +306,61 @@ void SofaGLFWWindow::mouseMoveEvent(int xpos, int ypos, SofaGLFWBaseGUI* gui)
     {
         case GLFW_PRESS:
         {
-            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
+            // gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
             {
                 core::objectmodel::MouseEvent* mEvent = nullptr;
-                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                if (m_currentButton == GLFW_MOUSE_BUTTON_LEFT)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftPressed, xpos, ypos);
-                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                else if (m_currentButton == GLFW_MOUSE_BUTTON_RIGHT)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightPressed, xpos, ypos);
-                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                else if (m_currentButton == GLFW_MOUSE_BUTTON_MIDDLE)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddlePressed, xpos, ypos);
                 else
                 {
                     // A fallback event to rule them all...
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonPressed, xpos, ypos);
                 }
-                camera->manageEvent(mEvent);
-                rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
+                m_currentCamera->manageEvent(mEvent);
+                gui->getRootNode()->propagateEvent(core::execparams::defaultInstance(), mEvent);
                 delete mEvent;
-            });
+            }
+            // });
 
             break;
         }
         case GLFW_RELEASE:
         {
-            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
+            // gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
             {
                 core::objectmodel::MouseEvent* mEvent = nullptr;
-                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                if (m_currentButton == GLFW_MOUSE_BUTTON_LEFT)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftReleased, xpos, ypos);
-                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                else if (m_currentButton == GLFW_MOUSE_BUTTON_RIGHT)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightReleased, xpos, ypos);
-                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                else if (m_currentButton == GLFW_MOUSE_BUTTON_MIDDLE)
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddleReleased, xpos, ypos);
                 else
                 {
                     // A fallback event to rules them all...
                     mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonReleased, xpos, ypos);
                 }
-                camera->manageEvent(mEvent);
-                rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
+                m_currentCamera->manageEvent(mEvent);
+                gui->getRootNode()->propagateEvent(core::execparams::defaultInstance(), mEvent);
                 delete mEvent;
-            });
+            }
+            // });
 
             break;
         }
         default:
         {
-            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos]()
+            // gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos]()
             {
                 core::objectmodel::MouseEvent mEvent(core::objectmodel::MouseEvent::Move, xpos, ypos);
-                camera->manageEvent(&mEvent);
-                rootNode->propagateEvent(core::execparams::defaultInstance(), &mEvent);
-            });
+                m_currentCamera->manageEvent(&mEvent);
+                gui->getRootNode()->propagateEvent(core::execparams::defaultInstance(), &mEvent);
+            }
+            // });
             break;
         }
     }
