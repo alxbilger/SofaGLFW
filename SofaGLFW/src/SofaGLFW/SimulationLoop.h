@@ -25,8 +25,12 @@
 #include <sofa/simulation/Simulation.h>
 #include <sofa/simulation/SimulationLoop.h>
 
+#include <atomic>
+#include <functional>
+#include <mutex>
 #include <shared_mutex>
 #include <thread>
+#include <vector>
 
 #include "SceneSnapshot.h"
 
@@ -47,13 +51,19 @@ public:
     bool simulationIsRunning() const;
 
 
-    void step() const;
+    void step();
 
-    void loop() const;
+    void loop();
 
     void start();
     void terminate();
     void captureVisualizationData(std::shared_ptr<SceneSnapshot> newScene) const;
+
+    /**
+     * @brief Push a command to be executed at the beginning of the next simulation step.
+     * @param command The command to execute.
+     */
+    void pushCommand(std::function<void()> command);
 
    private:
 
@@ -62,6 +72,9 @@ public:
 
 
     void commitVisual() const;
+
+    std::vector<std::function<void()>> m_commandQueue;
+    std::mutex m_commandQueueMutex;
 };
 
 

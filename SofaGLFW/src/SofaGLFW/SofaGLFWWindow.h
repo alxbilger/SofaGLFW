@@ -52,7 +52,7 @@ public:
 
     void mouseMoveEvent(int xpos, int ypos,SofaGLFWBaseGUI* gui);
     void mouseButtonEvent(int button, int action, int mods);
-    void scrollEvent(double xoffset, double yoffset);
+    void scrollEvent(double xoffset, double yoffset, SofaGLFWBaseGUI* gui);
     void setBackgroundColor(const RGBAColor& newColor);
     void setBackgroundImage(const std::string& filename);
     void drawBackgroundImage();

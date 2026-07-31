@@ -120,6 +120,12 @@ public:
     {
         return m_guiEngine;
     }
+
+    SimulationLoop& getSimulationLoop()
+    {
+        return m_simulationLoop;
+    }
+
     void moveRayPickInteractor(int eventX, int eventY) override ;
     
     void toggleVideoRecording();

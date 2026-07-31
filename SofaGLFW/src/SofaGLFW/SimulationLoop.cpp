@@ -44,8 +44,20 @@ bool SimulationLoop::simulationIsRunning() const
     return false;
 }
 
-void SimulationLoop::step() const
+void SimulationLoop::step()
 {
+    {
+        std::vector<std::function<void()>> commands;
+        {
+            std::lock_guard<std::mutex> lock(m_commandQueueMutex);
+            commands.swap(m_commandQueue);
+        }
+        for (const auto& command : commands)
+        {
+            command();
+        }
+    }
+
     if (simulationIsRunning())
     {
         sofa::helper::AdvancedTimer::begin("Animate");
@@ -59,7 +71,7 @@ void SimulationLoop::step() const
     }
 }
 
-void SimulationLoop::loop() const
+void SimulationLoop::loop()
 {
     while (m_running)
     {
@@ -90,6 +102,12 @@ void SimulationLoop::terminate()
         m_thread->join();
         m_thread = nullptr;
     }
+}
+
+void SimulationLoop::pushCommand(std::function<void()> command)
+{
+    std::lock_guard<std::mutex> lock(m_commandQueueMutex);
+    m_commandQueue.emplace_back(std::move(command));
 }
 
 void SimulationLoop::captureVisualizationData(std::shared_ptr<SceneSnapshot> newScene) const

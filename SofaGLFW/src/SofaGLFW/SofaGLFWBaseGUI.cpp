@@ -193,6 +193,13 @@ void SofaGLFWBaseGUI::drawScene()
 
 void SofaGLFWBaseGUI::viewAll()
 {
+    for (auto& w : s_mapWindows)
+    {
+        m_simulationLoop.pushCommand([this, w = w.second]()
+        {
+            w->centerCamera(this->groot, m_vparams);
+        });
+    }
 }
 
 void SofaGLFWBaseGUI::saveView()
@@ -614,7 +621,10 @@ void SofaGLFWBaseGUI::initVisual()
     m_vparams = VisualParams::defaultInstance();
     for (auto& [glfwWindow, sofaGlfwWindow] : s_mapWindows)
     {
-        sofaGlfwWindow->centerCamera(this->groot, m_vparams);
+        m_simulationLoop.pushCommand([this, sofaGlfwWindow]()
+        {
+            sofaGlfwWindow->centerCamera(this->groot, m_vparams);
+        });
     }
     
     setWindowBackgroundImage("textures/SOFA_logo.bmp", 0);
@@ -765,11 +775,17 @@ void SofaGLFWBaseGUI::key_callback(GLFWwindow* window, int key, int scancode, in
             {
                 if (action == GLFW_PRESS)
                 {
-                    currentGUI->getPickHandler()->activateRay(0, 0, rootNode.get());
+                    currentGUI->m_simulationLoop.pushCommand([currentGUI, rootNode]()
+                    {
+                        currentGUI->getPickHandler()->activateRay(0, 0, rootNode.get());
+                    });
                 }
                 else if (action == GLFW_RELEASE)
                 {
-                    currentGUI->getPickHandler()->deactivateRay();
+                    currentGUI->m_simulationLoop.pushCommand([currentGUI]()
+                    {
+                        currentGUI->getPickHandler()->deactivateRay();
+                    });
                 }
             }
             break;
@@ -785,7 +801,10 @@ void SofaGLFWBaseGUI::key_callback(GLFWwindow* window, int key, int scancode, in
             // A: Show scene axis
             case GLFW_KEY_A:
             {
-                triggerSceneAxis(currentGUI->groot);
+                currentGUI->m_simulationLoop.pushCommand([groot = currentGUI->groot]()
+                {
+                    triggerSceneAxis(groot);
+                });
                 break;
             }
             // B: Switch background
@@ -917,7 +936,11 @@ void SofaGLFWBaseGUI::moveRayPickInteractor(int eventX, int eventY)
     position = transform * Vec4d(0, 0, 0, 1);
     direction = transform * Vec4d(0, 0, 1, 0);
     direction.normalize();
-    getPickHandler()->updateRay(position, direction);
+
+    m_simulationLoop.pushCommand([this, position, direction]()
+    {
+        getPickHandler()->updateRay(position, direction);
+    });
 }
 
 void SofaGLFWBaseGUI::window_pos_callback(GLFWwindow* window, int xpos, int ypos)
@@ -1043,7 +1066,7 @@ void SofaGLFWBaseGUI::scroll_callback(GLFWwindow* window, double xoffset, double
     auto currentSofaWindow = s_mapWindows.find(window);
     if (currentSofaWindow != s_mapWindows.end() && currentSofaWindow->second)
     {
-        currentSofaWindow->second->scrollEvent(xoffset, yoffset);
+        currentSofaWindow->second->scrollEvent(xoffset, yoffset, currentGUI->second);
     }
 }
 

@@ -227,45 +227,48 @@ void SofaGLFWWindow::alignCamera(sofaglfw::SofaGLFWBaseGUI* baseGUI, const Camer
 {
     if (baseGUI)
     {
-        sofa::core::sptr<sofa::simulation::Node> groot = baseGUI->getRootNode();
-        if (groot)
+        baseGUI->getSimulationLoop().pushCommand([baseGUI, align]()
         {
-            sofa::component::visual::BaseCamera::SPtr camera;
-            groot->get(camera);
-
-            if (camera)
+            sofa::core::sptr<sofa::simulation::Node> groot = baseGUI->getRootNode();
+            if (groot)
             {
-                sofa::type::Quat<float> orientation;
+                sofa::component::visual::BaseCamera::SPtr camera;
+                groot->get(camera);
 
-                switch (align)
+                if (camera)
                 {
-                case CameraAlignement::TOP:
-                    orientation = sofa::type::Quat(-0.707f, 0.f, 0.f, 0.707f);
-                    break;
-                case CameraAlignement::BOTTOM:
-                    orientation = sofa::type::Quat(0.707f, 0.f, 0.f, 0.707f);
-                    break;
-                case CameraAlignement::FRONT:
-                    orientation = sofa::type::Quat(0.f, 0.f, 0.f, 1.f);
-                    break;
-                case CameraAlignement::BACK:
-                    orientation = sofa::type::Quat(0.f, 1.f, 0.f, 0.f);
-                    break;
-                case CameraAlignement::LEFT:
-                    orientation = sofa::type::Quat(0.f, 0.707f, 0.f, 0.707f);
-                    break;
-                case CameraAlignement::RIGHT:
-                    orientation = sofa::type::Quat(0.f, -0.707f, 0.f, 0.707f);
-                    break;
-                }
+                    sofa::type::Quat<float> orientation;
 
-                auto bbCenter = (groot->f_bbox.getValue().maxBBox() + groot->f_bbox.getValue().minBBox()) * 0.5f;
-                const auto cameraPosition = camera->getPositionFromOrientation(sofa::type::Vec3(0., 0., 0.), -camera->getDistance(), orientation);
-                camera->setView(cameraPosition + bbCenter, orientation);
-                camera->d_lookAt.setValue(bbCenter);
-                camera->setCameraType(sofa::core::visual::VisualParams::ORTHOGRAPHIC_TYPE);
+                    switch (align)
+                    {
+                    case CameraAlignement::TOP:
+                        orientation = sofa::type::Quat(-0.707f, 0.f, 0.f, 0.707f);
+                        break;
+                    case CameraAlignement::BOTTOM:
+                        orientation = sofa::type::Quat(0.707f, 0.f, 0.f, 0.707f);
+                        break;
+                    case CameraAlignement::FRONT:
+                        orientation = sofa::type::Quat(0.f, 0.f, 0.f, 1.f);
+                        break;
+                    case CameraAlignement::BACK:
+                        orientation = sofa::type::Quat(0.f, 1.f, 0.f, 0.f);
+                        break;
+                    case CameraAlignement::LEFT:
+                        orientation = sofa::type::Quat(0.f, 0.707f, 0.f, 0.707f);
+                        break;
+                    case CameraAlignement::RIGHT:
+                        orientation = sofa::type::Quat(0.f, -0.707f, 0.f, 0.707f);
+                        break;
+                    }
+
+                    auto bbCenter = (groot->f_bbox.getValue().maxBBox() + groot->f_bbox.getValue().minBBox()) * 0.5f;
+                    const auto cameraPosition = camera->getPositionFromOrientation(sofa::type::Vec3(0., 0., 0.), -camera->getDistance(), orientation);
+                    camera->setView(cameraPosition + bbCenter, orientation);
+                    camera->d_lookAt.setValue(bbCenter);
+                    camera->setCameraType(sofa::core::visual::VisualParams::ORTHOGRAPHIC_TYPE);
+                }
             }
-        }
+        });
     }
 }
 
@@ -303,54 +306,58 @@ void SofaGLFWWindow::mouseMoveEvent(int xpos, int ypos, SofaGLFWBaseGUI* gui)
     {
         case GLFW_PRESS:
         {
-            core::objectmodel::MouseEvent* mEvent = nullptr;
-            if (m_currentButton == GLFW_MOUSE_BUTTON_LEFT)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftPressed, xpos, ypos);
-            else if (m_currentButton == GLFW_MOUSE_BUTTON_RIGHT)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightPressed, xpos, ypos);
-            else if (m_currentButton == GLFW_MOUSE_BUTTON_MIDDLE)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddlePressed, xpos, ypos);
-            else
+            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
             {
-                // A fallback event to rule them all...
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonPressed, xpos, ypos);
-            }
-            m_currentCamera->manageEvent(mEvent);
-
-            auto rootNode = gui->getRootNode();
-
-            rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
-            delete mEvent;
+                core::objectmodel::MouseEvent* mEvent = nullptr;
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftPressed, xpos, ypos);
+                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightPressed, xpos, ypos);
+                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddlePressed, xpos, ypos);
+                else
+                {
+                    // A fallback event to rule them all...
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonPressed, xpos, ypos);
+                }
+                camera->manageEvent(mEvent);
+                rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
+                delete mEvent;
+            });
 
             break;
         }
         case GLFW_RELEASE:
         {
-            core::objectmodel::MouseEvent* mEvent = nullptr;
-            if (m_currentButton == GLFW_MOUSE_BUTTON_LEFT)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftReleased, xpos, ypos);
-            else if (m_currentButton == GLFW_MOUSE_BUTTON_RIGHT)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightReleased, xpos, ypos);
-            else if (m_currentButton == GLFW_MOUSE_BUTTON_MIDDLE)
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddleReleased, xpos, ypos);
-            else
+            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos, button = m_currentButton]()
             {
-                // A fallback event to rules them all...
-                mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonReleased, xpos, ypos);
-            }
-            m_currentCamera->manageEvent(mEvent);
-
-            auto rootNode = gui->getRootNode();
-
-            rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
-            delete mEvent;
+                core::objectmodel::MouseEvent* mEvent = nullptr;
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::LeftReleased, xpos, ypos);
+                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::RightReleased, xpos, ypos);
+                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::MiddleReleased, xpos, ypos);
+                else
+                {
+                    // A fallback event to rules them all...
+                    mEvent = new core::objectmodel::MouseEvent(core::objectmodel::MouseEvent::AnyExtraButtonReleased, xpos, ypos);
+                }
+                camera->manageEvent(mEvent);
+                rootNode->propagateEvent(core::execparams::defaultInstance(), mEvent);
+                delete mEvent;
+            });
 
             break;
         }
         default:
         {
-            core::objectmodel::MouseEvent me(core::objectmodel::MouseEvent::Move, xpos, ypos);
-            m_currentCamera->manageEvent(&me);
+            gui->getSimulationLoop().pushCommand([camera = m_currentCamera, rootNode = gui->getRootNode(), xpos, ypos]()
+            {
+                core::objectmodel::MouseEvent mEvent(core::objectmodel::MouseEvent::Move, xpos, ypos);
+                camera->manageEvent(&mEvent);
+                rootNode->propagateEvent(core::execparams::defaultInstance(), &mEvent);
+            });
             break;
         }
     }
@@ -383,29 +390,29 @@ bool SofaGLFWWindow::mouseEvent(GLFWwindow* window, int width, int height,int bu
     mousepos.y = static_cast<int>(ypos);
     auto rootNode = gui->getRootNode();
 
-    if (GLFW_MOD_SHIFT)
+    gui->getSimulationLoop().pushCommand([gui, width, height, rootNode, button, action, mousepos, xpos, ypos]()
     {
-        gui->getPickHandler()->activateRay(width, height, rootNode.get());
-        gui->getPickHandler()->updateMouse2D(mousepos);
+        if (GLFW_MOD_SHIFT)
+        {
+            gui->getPickHandler()->activateRay(width, height, rootNode.get());
+            gui->getPickHandler()->updateMouse2D(mousepos);
 
-        if (action == GLFW_PRESS)
-        {
-            if (button == GLFW_MOUSE_BUTTON_LEFT)
+            if (action == GLFW_PRESS)
             {
-                gui->getPickHandler()->handleMouseEvent(PRESSED, LEFT);
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                {
+                    gui->getPickHandler()->handleMouseEvent(PRESSED, LEFT);
+                }
+                else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+                {
+                    gui->getPickHandler()->handleMouseEvent(PRESSED, RIGHT);
+                }
+                else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+                {
+                    gui->getPickHandler()->handleMouseEvent(PRESSED, MIDDLE);
+                }
             }
-            else if (button == GLFW_MOUSE_BUTTON_RIGHT)
-            {
-                gui->getPickHandler()->handleMouseEvent(PRESSED, RIGHT);
-            }
-            else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
-            {
-                gui->getPickHandler()->handleMouseEvent(PRESSED, MIDDLE);
-            }
-        }
-        else if (action == GLFW_RELEASE)
-        {
-            if (action == GLFW_RELEASE)
+            else if (action == GLFW_RELEASE)
             {
                 if (button == GLFW_MOUSE_BUTTON_LEFT)
                 {
@@ -421,22 +428,29 @@ bool SofaGLFWWindow::mouseEvent(GLFWwindow* window, int width, int height,int bu
                     gui->getPickHandler()->handleMouseEvent(RELEASED, MIDDLE);
                 }
             }
+            gui->moveRayPickInteractor(static_cast<int>(xpos), static_cast<int>(ypos));
         }
-        gui->moveRayPickInteractor(xpos, ypos);
-    }
-    else
-    {
-        gui->getPickHandler()->activateRay(width, height, rootNode.get());
-    }
+        else
+        {
+            gui->getPickHandler()->activateRay(width, height, rootNode.get());
+        }
+    });
+
     return true;
 }
 
-void SofaGLFWWindow::scrollEvent(double xoffset, double yoffset)
+void SofaGLFWWindow::scrollEvent(double xoffset, double yoffset, SofaGLFWBaseGUI* gui)
 {
     SOFA_UNUSED(xoffset);
-    const double yFactor = 10.f;
-    core::objectmodel::MouseEvent me(core::objectmodel::MouseEvent::Wheel, static_cast<int>(yoffset * yFactor));
-    m_currentCamera->manageEvent(&me);
+    if (gui && m_currentCamera)
+    {
+        const double yFactor = 10.f;
+        gui->getSimulationLoop().pushCommand([camera = m_currentCamera, yoffset, yFactor]()
+        {
+            core::objectmodel::MouseEvent me(core::objectmodel::MouseEvent::Wheel, static_cast<int>(yoffset * yFactor));
+            camera->manageEvent(&me);
+        });
+    }
 }
 
 } // namespace sofaglfw
