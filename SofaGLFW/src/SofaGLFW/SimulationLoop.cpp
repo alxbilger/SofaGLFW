@@ -60,6 +60,22 @@ void SimulationLoop::step()
 
     if (simulationIsRunning())
     {
+        auto now = std::chrono::steady_clock::now();
+        if (m_lastStepTime.time_since_epoch().count() > 0)
+        {
+            float deltaTime = std::chrono::duration<float>(now - m_lastStepTime).count();
+            m_framerateAccum += deltaTime;
+            m_framerateCount++;
+
+            if (m_framerateAccum >= 0.5f) // Update every 0.5 seconds
+            {
+                m_physicsFramerate.store(static_cast<float>(m_framerateCount) / m_framerateAccum, std::memory_order_relaxed);
+                m_framerateAccum = 0.0f;
+                m_framerateCount = 0;
+            }
+        }
+        m_lastStepTime = now;
+
         sofa::helper::AdvancedTimer::begin("Animate");
 
         sofa::simulation::node::animate(this->groot.get(), this->groot->getDt());
@@ -108,6 +124,11 @@ void SimulationLoop::pushCommand(std::function<void()> command)
 {
     std::lock_guard<std::mutex> lock(m_commandQueueMutex);
     m_commandQueue.emplace_back(std::move(command));
+}
+
+float SimulationLoop::getPhysicsFramerate() const
+{
+    return m_physicsFramerate.load(std::memory_order_relaxed);
 }
 
 void SimulationLoop::captureVisualizationData(std::shared_ptr<SceneSnapshot> newScene) const

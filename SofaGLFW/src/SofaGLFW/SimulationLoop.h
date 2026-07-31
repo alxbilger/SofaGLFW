@@ -26,6 +26,7 @@
 #include <sofa/simulation/SimulationLoop.h>
 
 #include <atomic>
+#include <chrono>
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
@@ -59,6 +60,8 @@ public:
     void terminate();
     void captureVisualizationData(std::shared_ptr<SceneSnapshot> newScene) const;
 
+    float getPhysicsFramerate() const;
+
     /**
      * @brief Push a command to be executed at the beginning of the next simulation step.
      * @param command The command to execute.
@@ -70,6 +73,10 @@ public:
     std::atomic<bool> m_running { false };
     std::unique_ptr<std::thread> m_thread;
 
+    mutable std::atomic<float> m_physicsFramerate { 0.0f };
+    std::chrono::steady_clock::time_point m_lastStepTime;
+    float m_framerateAccum { 0.0f };
+    int m_framerateCount { 0 };
 
     void commitVisual() const;
 
